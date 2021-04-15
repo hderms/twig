@@ -1,48 +1,36 @@
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 
 use warp::Filter;
 mod trie;
 use serde::{Deserialize, Serialize};
-use trie::Node;
+use trie::Umbrella;
 
 #[tokio::main]
 async fn main() {
     // GET /hello/warp => 200 OK with body "Hello, warp!"
-    let root = Arc::new(RwLock::new(Node::new()));
+    let umbrella = Arc::new(Umbrella::new());
     let insert = {
-        let root = root.clone();
+        let root = umbrella.clone();
 
         warp::post()
             .and(warp::path("insert"))
             .and(warp::body::content_length_limit(1024))
             .and(warp::body::json())
             .map(move |insert_request: InsertRequest| {
-                let root = root.clone();
-                let mut root = root.write().unwrap();
-                root.insert(insert_request.string.as_str());
+                let mut node = root.get(&insert_request.string).write().unwrap();
+                node.insert(insert_request.string.as_str());
                 warp::reply::json(&Success::new())
             })
     };
 
-    let full = {
-        let root = root.clone();
-        warp::get().and(warp::path("full")).map(move || {
-            let root = root.clone();
-            let root = root.read().unwrap();
-            warp::reply::json(&&*root)
-        })
-    };
-
     let suggest = {
-        let root = root.clone();
+        let root = umbrella.clone();
         warp::get()
             .and(warp::path("suggestions"))
             .and(warp::query::<SuggestRequest>())
             .map(move |suggest_request: SuggestRequest| {
-                let root = root.clone();
-                let suggestions = root
-                    .read()
-                    .unwrap()
+                let node = root.get(&suggest_request.string).read().unwrap();
+                let suggestions = node
                     .suggest(suggest_request.string.as_str(), suggest_request.limit)
                     .unwrap_or_default();
                 let response = SuggestResponse::new(suggestions);
@@ -50,7 +38,7 @@ async fn main() {
             })
     };
 
-    warp::serve(insert.or(full).or(suggest))
+    warp::serve(insert.or(suggest))
         .run(([127, 0, 0, 1], 3030))
         .await;
 }

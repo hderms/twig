@@ -1,13 +1,36 @@
 use serde::Serialize;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::{Arc, RwLock}};
 #[derive(Debug, Serialize)]
 pub struct Node {
     children: HashMap<char, Node>,
     terminal: bool,
 }
+pub struct Umbrella {
+    roots: HashMap<char, Arc<RwLock<Node>>>
+}
+impl Umbrella{
+    pub fn new() -> Umbrella {
+        let mut roots = HashMap::new();
+        for char in 'a'..'z' {
+            roots.insert(char, Arc::new(RwLock::new(Node::new())));
+
+
+        }
+
+        for char in 'A'..'Z' {
+            roots.insert(char, Arc::new(RwLock::new(Node::new())));
+        }
+        Umbrella{
+            roots
+        }
+    }
+    pub fn get(&self, string: &str) -> &RwLock<Node> {
+        self.roots.get(&string.chars().next().unwrap()).unwrap()
+    }
+}
 impl Node {
     pub fn new() -> Node {
-        let children = HashMap::new();
+        let children = HashMap::with_capacity(256);
         let terminal = false;
         Node { children, terminal }
     }
