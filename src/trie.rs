@@ -11,13 +11,14 @@ pub struct Umbrella {
 impl Umbrella{
     pub fn new() -> Umbrella {
         let mut roots = HashMap::new();
-        for char in 'a'..'z' {
+        for char in 'a'..='z' {
             roots.insert(char, Arc::new(RwLock::new(Node::new())));
-
-
         }
 
-        for char in 'A'..'Z' {
+        for char in 'A'..='Z' {
+            roots.insert(char, Arc::new(RwLock::new(Node::new())));
+        }
+        for char in '0'..='9' {
             roots.insert(char, Arc::new(RwLock::new(Node::new())));
         }
         Umbrella{
@@ -30,11 +31,13 @@ impl Umbrella{
 }
 impl Node {
     pub fn new() -> Node {
-        let children = HashMap::with_capacity(256);
+        let children = HashMap::with_capacity(32);
         let terminal = false;
         Node { children, terminal }
     }
     pub fn insert(&mut self, string: &str) {
+        let string = string.to_ascii_lowercase();
+        let string = string.as_str();
         if string.is_empty() {
             self.terminal = true;
             return;
@@ -46,6 +49,8 @@ impl Node {
 
     pub fn suggest<'a>(&'a self, string: &'a str, limit: usize) -> Option<Vec<String>> {
         let mut vec = Vec::with_capacity(limit);
+        let string = string.to_ascii_lowercase();
+        let string = string.as_str();
         self.find(string).map(|found| {
             if found.terminal {
                 vec.push(string.to_string());
