@@ -15,19 +15,24 @@ pub struct Umbrella {
 }
 impl Umbrella {
     pub fn new() -> Umbrella {
+        fn new_node() -> Arc<RwLock<Node>>  {
+            Arc::new(RwLock::new(Node::new()))
+        }
         let mut roots = HashMap::with_capacity(128);
+
         for char in 'a'..='z' {
-            roots.insert(char, Arc::new(RwLock::new(Node::new())));
+            roots.insert(char, new_node());
         }
 
         for char in '0'..='9' {
-            roots.insert(char, Arc::new(RwLock::new(Node::new())));
+            roots.insert(char, new_node());
         }
+
         Umbrella { roots }
     }
-    pub fn seed(file_name: &str) -> Result<Umbrella, std::io::Error> {
+    pub fn seed(file_name: &str) -> Umbrella {
         let umbrella = Self::new();
-        let file = File::open(file_name)?;
+        let file = File::open(file_name).expect("failed to open file");
         let reader = BufReader::new(file).lines();
         for line in reader {
             let line = line.unwrap();
@@ -35,7 +40,7 @@ impl Umbrella {
             let mut write = node.write().unwrap();
             write.insert(&line);
         }
-        Ok(umbrella)
+        umbrella
     }
     pub fn get(&self, string: &str) -> &RwLock<Node> {
         self.roots.get(&string.to_ascii_lowercase().chars().next().unwrap()).unwrap()

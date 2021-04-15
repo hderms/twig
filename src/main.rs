@@ -10,7 +10,7 @@ async fn main() {
     // GET /hello/warp => 200 OK with body "Hello, warp!"
     let maybe_file_name = std::env::args().nth(1);
     let umbrella = if let Some(file_name) = maybe_file_name {
-        Umbrella::seed(&file_name).expect("failed to load file")
+        Umbrella::seed(&file_name)
     } else {
         Umbrella::new()
     };
