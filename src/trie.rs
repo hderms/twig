@@ -5,17 +5,12 @@ use std::{
     fs::File,
     sync::{Arc, RwLock},
 };
-#[derive(Debug, Serialize)]
-pub struct Node {
-    children: HashMap<char, Node>,
-    terminal: bool,
-}
 pub struct Umbrella {
     roots: HashMap<char, Arc<RwLock<Node>>>,
 }
 impl Umbrella {
     pub fn new() -> Umbrella {
-        fn new_node() -> Arc<RwLock<Node>>  {
+        fn new_node() -> Arc<RwLock<Node>> {
             Arc::new(RwLock::new(Node::new()))
         }
         let mut roots = HashMap::with_capacity(128);
@@ -43,8 +38,16 @@ impl Umbrella {
         umbrella
     }
     pub fn get(&self, string: &str) -> &RwLock<Node> {
-        self.roots.get(&string.to_ascii_lowercase().chars().next().unwrap()).unwrap()
+        self.roots
+            .get(&string.to_ascii_lowercase().chars().next().unwrap())
+            .unwrap()
     }
+}
+
+#[derive(Debug, Serialize)]
+pub struct Node {
+    children: HashMap<char, Node>,
+    terminal: bool,
 }
 impl Node {
     pub fn new() -> Node {
