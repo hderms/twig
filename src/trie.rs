@@ -15,14 +15,11 @@ pub struct Umbrella {
 }
 impl Umbrella {
     pub fn new() -> Umbrella {
-        let mut roots = HashMap::new();
+        let mut roots = HashMap::with_capacity(128);
         for char in 'a'..='z' {
             roots.insert(char, Arc::new(RwLock::new(Node::new())));
         }
 
-        for char in 'A'..='Z' {
-            roots.insert(char, Arc::new(RwLock::new(Node::new())));
-        }
         for char in '0'..='9' {
             roots.insert(char, Arc::new(RwLock::new(Node::new())));
         }
@@ -41,12 +38,12 @@ impl Umbrella {
         Ok(umbrella)
     }
     pub fn get(&self, string: &str) -> &RwLock<Node> {
-        self.roots.get(&string.chars().next().unwrap()).unwrap()
+        self.roots.get(&string.to_ascii_lowercase().chars().next().unwrap()).unwrap()
     }
 }
 impl Node {
     pub fn new() -> Node {
-        let children = HashMap::with_capacity(32);
+        let children = HashMap::with_capacity(1);
         let terminal = false;
         Node { children, terminal }
     }
