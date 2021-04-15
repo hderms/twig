@@ -1,14 +1,19 @@
 use serde::Serialize;
-use std::{collections::HashMap, sync::{Arc, RwLock}};
+use std::io::{BufRead, BufReader};
+use std::{
+    collections::HashMap,
+    fs::File,
+    sync::{Arc, RwLock},
+};
 #[derive(Debug, Serialize)]
 pub struct Node {
     children: HashMap<char, Node>,
     terminal: bool,
 }
 pub struct Umbrella {
-    roots: HashMap<char, Arc<RwLock<Node>>>
+    roots: HashMap<char, Arc<RwLock<Node>>>,
 }
-impl Umbrella{
+impl Umbrella {
     pub fn new() -> Umbrella {
         let mut roots = HashMap::new();
         for char in 'a'..='z' {
@@ -21,9 +26,19 @@ impl Umbrella{
         for char in '0'..='9' {
             roots.insert(char, Arc::new(RwLock::new(Node::new())));
         }
-        Umbrella{
-            roots
+        Umbrella { roots }
+    }
+    pub fn seed(file_name: &str) -> Result<Umbrella, std::io::Error> {
+        let umbrella = Self::new();
+        let file = File::open(file_name)?;
+        let reader = BufReader::new(file).lines();
+        for line in reader {
+            let line = line.unwrap();
+            let node = umbrella.get(&line);
+            let mut write = node.write().unwrap();
+            write.insert(&line);
         }
+        Ok(umbrella)
     }
     pub fn get(&self, string: &str) -> &RwLock<Node> {
         self.roots.get(&string.chars().next().unwrap()).unwrap()

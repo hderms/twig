@@ -8,7 +8,13 @@ use trie::Umbrella;
 #[tokio::main]
 async fn main() {
     // GET /hello/warp => 200 OK with body "Hello, warp!"
-    let umbrella = Arc::new(Umbrella::new());
+    let maybe_file_name = std::env::args().nth(1);
+    let umbrella = if let Some(file_name) = maybe_file_name {
+        Umbrella::seed(&file_name).expect("failed to load file")
+    } else {
+        Umbrella::new()
+    };
+    let umbrella = Arc::new(umbrella);
     let insert = {
         let root = umbrella.clone();
 
