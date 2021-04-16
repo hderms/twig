@@ -44,8 +44,14 @@ async fn main() {
             })
     };
 
-    warp::serve(insert.or(suggest))
-        .run(([127, 0, 0, 1], 3030))
+let cors = warp::cors()
+    .allow_headers(vec!["User-Agent", "Sec-Fetch-Mode", "Referer", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Content-Type"])
+
+    .allow_origin("http://localhost:3000")
+    .allow_methods(vec!["GET", "POST", "DELETE"]);
+
+    warp::serve(insert.or(suggest.with(&cors).with(cors)))
+        .run(([127, 0, 0, 1], 3031))
         .await;
 }
 
